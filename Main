@@ -18,27 +18,41 @@ def finish():
 	print("-"*20)
 	print("FINISHED\n")
 
+def processing_file(name_of_file):
+	with open(name_of_file, "r+") as f:
+			message = str(f.read())
+			return message
+
+"""
+try:
+	script, filename = argv
+	if filename.exists():
+		processing_file(filename)
+		print(message)
+	else:
+		pass
+"""
 
 while True:
 	try:
 		print("Type the name of .txt(!) file with single(!) SIP message to analyse:")
 		name_of_file = str(input("> "))
-		with open(name_of_file, "r+") as f:
-			message = str(f.read())
-			print(message)
+		message = processing_file(name_of_file)
+		start("STARTING ANALYSIS")
+		print(message)
+		break
 	except NameError as ex:
-			print("Caught the EOF error:{0}".format(ex))
-			print("Let's try again.")		
-			continue
+		print("Caught the EOF error:{0}".format(ex))
+		print("Let's try again.")		
+		continue
 	except EOFError as ex:
-			print("Caught the EOF error:{0}".format(ex))
-			print("Let's try again.")
-			continue
+		print("Caught the EOF error:{0}".format(ex))
+		print("Let's try again.")
+		continue
 	except IOError as ex:
-			print("Caught the I/O error:{0}".format(ex))
-			print("Let's try again.")
-			continue
-
+		print("Caught the I/O error:{0}".format(ex))
+		print("Let's try again.")
+		continue	
 
 #unittest
 '''
@@ -46,7 +60,7 @@ print(len(message))
 assert len(message) > 0, "The message is empty"
 assert message == None, "There should be a value"'''
 
-start("STARTING ANALYSIS")
+
 
 '''
 # for OOP version
@@ -57,6 +71,34 @@ name_of_file = str(input("> "))
 if __name__ == "__main__":
     start = Headers(name_of_file)
 '''
+
+headers_list = {
+	'via' : 'Via',
+	'max_forwards' : 'Max-Forwards',
+	'to' : 'To',
+	'from' : 'From',
+	'call_id' : 'Call-ID',
+	'cseq' : 'CSeq',
+}
+
+headers_invite = headers_list.copy()
+headers_invite['contact'] = 'Contact'
+
+start("Headres check:")
+if re.search('INVITE', message):
+	for key in headers_invite:
+		if re.search(headers_invite[key], message):
+			print(key.upper(), True)
+		else:
+			print(headers_invite[key].upper(), False)	
+else:
+	for key in headers_list:
+		if re.search(headers_list[key], message):
+			print(key.upper(), True)
+		else:
+			print(headers_list[key], False)
+finish()
+
 
 client_errors = {
 	'bad_request' : '(400)',
@@ -133,4 +175,4 @@ print('SDP is checked') if re.search('sendrecv', message) else print('Check SDP:
 print('P-Early-Media:supported') if re.search('P-Early-Media: supported', message) else print('P-Early-Media: NOT supported')
 print('P-Access-Network-Info: IEEE-802.11') if re.search('P-Access-Network-Info: IEEE-802.11', message) else print('No VoWiFi PANI')
 print('Cellular-Network-Info: 3GPP-E-UTRAN') if re.search('Cellular-Network-Info: 3GPP-E-UTRAN', message) else print('No CNI for VoWiFi')
-
+finish()
