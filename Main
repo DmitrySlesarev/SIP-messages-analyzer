@@ -18,9 +18,6 @@ def finish():
 	print("-"*20)
 	print("FINISHED\n")
 
-try:
-	script, filename = argv
-	if filename.exists():
 
 while True:
 	try:
