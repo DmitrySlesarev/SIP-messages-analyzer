@@ -1,44 +1,63 @@
 """ This is SIP Signalling analyzer by FT-RU. All rights are reserved """
 
-print ("""This script analyzes content of Session Initiation Protocol in accordance with RFC's:
-			3265, 3853, 4320, 4916, 5393, 5621,
-            \t\t5626, 5630, 5922, 5954, 6026, 6141,                         
-            \t\t6665, 6878, 7462, 7463, 8217, 8591""")
+print ("""This script analyzes content of Session Initiation Protocol in \
+accordance with RFC's:3265, 3853, 4320, 4916, 5393, 5621, 5626, 5630, 5922,\
+5954, 6026, 6141, 6665, 6878, 7462, 7463, 8217, 8591\n""")
 
 import re
 from sys import argv
 from os.path import exists
 
+
 def start(func):
-	print("="*20)
-	print(func.upper())
-	print("="*20)
+    ## this function wraps initial text
+    print("="*20)
+    print(func.upper())
+    print("="*20)
 
 def finish():
-	print("-"*20)
-	print("FINISHED\n")
+    ## this function finishes text
+    print("-"*20)
+    print("FINISHED\n")
+
+
+def processing_file(name_of_file):
+    ## this function opens file for handling
+    with open(name_of_file, "r+") as f:
+        message = str(f.read())
+        return message
+
+"""
+try:
+	script, filename = argv
+	if filename.exists():
+		processing_file(filename)
+		print(message)
+	else:
+		pass
+"""
 
 
 while True:
-	try:
-		print("Type the name of .txt(!) file with single(!) SIP message to analyse:")
-		name_of_file = str(input("> "))
-		with open(name_of_file, "r+") as f:
-			message = str(f.read())
-			print(message)
-	except NameError as ex:
-			print("Caught the EOF error:{0}".format(ex))
-			print("Let's try again.")		
-			continue
-	except EOFError as ex:
-			print("Caught the EOF error:{0}".format(ex))
-			print("Let's try again.")
-			continue
-	except IOError as ex:
-			print("Caught the I/O error:{0}".format(ex))
-			print("Let's try again.")
-			continue
-
+    try:
+        print("""Type the name of .txt(!) file with single(!) SIP message to analyse:""")
+        name_of_file = str(input("> "))
+        message = processing_file(name_of_file)
+        start("STARTING ANALYSIS")
+        print(message)
+        break
+    except NameError as ex:
+        print("Caught the EOF error:{0}".format(ex))
+        print("Wrong name. Let's try again.")		
+        continue
+    except EOFError as ex:
+        print("Caught the EOF error:{0}".format(ex))
+        print("Wrong name. Let's try again.")
+        continue
+    except IOError as ex:
+        print("Caught the I/O error:{0}".format(ex))
+        print("Wrong name. Let's try again.")
+        continue	
 
 #unittest
 '''
@@ -46,7 +65,7 @@ print(len(message))
 assert len(message) > 0, "The message is empty"
 assert message == None, "There should be a value"'''
 
-start("STARTING ANALYSIS")
+
 
 '''
 # for OOP version
@@ -58,79 +77,166 @@ if __name__ == "__main__":
     start = Headers(name_of_file)
 '''
 
-client_errors = {
-	'bad_request' : '(400)',
-	'unathorized' : '(401)',
-	'forbidden' : '(403)',
-	'not_found' : '(404)',
-	'proxy_authentication_required' : '(407)',
-	'request_timeout' : '(408)',
-	'temporary_unavailable' : '(480)',
-	'call_or_transaction_does_not_exist' : '(481)',
-	'busy_here' : '(486)',
-	'request_terminated' : '(487)',
-	}
 
-start("Errors of Client:")
-for key in client_errors:
-		if re.search(client_errors[key], message):
-			print(key.upper(), True)
-		else:
-			print(client_errors[key].upper(), False)
-finish()
+def header_verification(arg):
+    ## The Function checks if the headers comply RFC 3261
+    headers_list = {
+        'via' : 'Via',
+        'max_forwards' : 'Max-Forwards',
+        'to' : 'To',
+        'from' : 'From',
+        'call_id' : 'Call-ID',
+        'cseq' : 'CSeq',
+        }
 
+    headers_invite = headers_list.copy()
+    headers_invite['contact'] = 'Contact'
 
-server_errors = {
-	'bad_gateway' : '(502)',
- 	'service_unavailable' : '(503)',
-	}
-
-start("Server errors:")
-for key in server_errors:
-	if re.search(server_errors[key], message):
-		print(key.upper(), True)
-	else:
-		print(server_errors[key].upper(), False)
-finish()
+    start("Headers check:")
+    if re.search('INVITE', message):
+        for key in headers_invite:
+            if re.search(headers_invite[key], message):
+                print(key.upper(), True)
+            else:
+                print(headers_invite[key].upper(), False)	
+    else:
+        for key in headers_list:
+            if re.search(headers_list[key], message):
+                print(key.upper(), True)
+            else:
+                print(headers_list[key], False)
+    finish()
 
 
-global_errors = {
-	'busy_everywhere' : '(600)', 
-	'decline' : '(603)',
-}
+def client_verification(arg):
+    ## The Function checks if there are any Client Errors
+    client_errors = {
+        'bad_request' : '(400)',
+        'unathorized' : '(401)',
+        'forbidden' : '(403)',
+        'not_found' : '(404)',
+        'proxy_authentication_required' : '(407)',
+        'request_timeout' : '(408)',
+        'temporary_unavailable' : '(480)',
+        'call_or_transaction_does_not_exist' : '(481)',
+        'busy_here' : '(486)',
+        'request_terminated' : '(487)',
+        }
 
-start("Global errors:")
-for key in global_errors:
-	if re.search(global_errors[key], message):
-		print(key.upper(), True)
-	else:
-		print(global_errors[key].upper(), False)	
-finish()
+    start("Errors of Client:")
+    for key in client_errors:
+            if re.search(client_errors[key], message):
+                print(key.upper(), True)
+            else:
+                print(client_errors[key].upper(), False)
+    finish()
 
-#phone context check
-start("Phone context check:")
 
-phone_context = [
-	'.i-wlan.ims.mnc',
-	]
-for i in phone_context:
-	if i in message:
-		print("""In accordance with Megafon NW requirements, the FQDN cannot have WiFi MAC address & i-wlan string.\n
-			PROHIBITED:\n
-INVITE sip:89262000099;phone-context=d460e3ed8420.i-wlan.ims.mnc002.mcc250.3gppnetwork.org@ims.mnc002.mcc250.3gppnetwork.org;user=phone SIP/2.0\n
-REQUIRED:\n
-phone-context=ims.mnc002.mcc250.3gppnetwork.org@ims.mnc002.mcc250.3gppnetwork.org\n
-Please, comply.""")
-	else:
-		print("Phone context matches the requirements")
-finish()
+def server_verification(arg):
+    ## The Function checks if there are any Server Errors
+    server_errors = {
+        'bad_gateway' : '(502)',
+        'service_unavailable' : '(503)',
+        }
 
-start("Crosscheck:")
-print('Complies RFC 3261') if re.search('z9hG4bK', message) else print('Doesn\'t comply RFC 3261')
-print('GEO PIDF is present') if re.search('<gml:pos>', message) else print('Doesn\'t comply AOSA')
-print('EVS is allowed') if re.search('EVS', message) else print('No EVS codec')
-print('SDP is checked') if re.search('sendrecv', message) else print('Check SDP: no bilateral voice')
-print('P-Early-Media:supported') if re.search('P-Early-Media: supported', message) else print('P-Early-Media: NOT supported')
-print('P-Access-Network-Info: IEEE-802.11') if re.search('P-Access-Network-Info: IEEE-802.11', message) else print('No VoWiFi PANI')
-print('Cellular-Network-Info: 3GPP-E-UTRAN') if re.search('Cellular-Network-Info: 3GPP-E-UTRAN', message) else print('No CNI for VoWiFi')
+    start("Server errors:")
+    for key in server_errors:
+        if re.search(server_errors[key], message):
+            print(key.upper(), True)
+        else:
+            print(server_errors[key].upper(), False)
+    finish()
+
+
+def global_errors_verification(arg):
+    ## The Function checks if there are any Global Errors
+    global_errors = {
+        'busy_everywhere' : '(600)', 
+        'decline' : '(603)',
+    }
+
+    start("Global errors:")
+    for key in global_errors:
+        if re.search(global_errors[key], message):
+            print(key.upper(), True)
+        else:
+            print(global_errors[key].upper(), False)	
+    finish()
+
+
+def phone_context_verification(arg):
+    ## The Function checks the phone-context attribute
+    start("Phone context check:")
+
+    phone_context = [
+        '.i-wlan.ims.mnc',
+        ]
+    for i in phone_context:
+        if i in message:
+            print("""In accordance with Megafon NW requirements, 
+                 the FQDN cannot have WiFi MAC address & i-wlan string.\n
+                 PROHIBITED:\n
+                 INVITE sip:89262000099;phone-context=d460e3ed8420.i-wlan.ims.mnc002.mcc250.3gppnetwork.org@ims.mnc002.mcc250.3gppnetwork.org;user=phone SIP/2.0\n
+                 REQUIRED:\n
+                 phone-context=ims.mnc002.mcc250.3gppnetwork.org@ims.mnc002.mcc250.3gppnetwork.org\n
+                 Please, comply.""")
+        else:
+            print("Phone context matches the requirements")
+    finish()
+
+
+def crosscheck(arg):
+	## The functions doesn't comply PEP8 intentionally
+    start("Crosscheck:")
+    print('Complies RFC 3261') if re.search('z9hG4bK', message) else print('Doesn\'t comply RFC 3261')
+    print('GEO PIDF is present') if re.search('<gml:pos>', message) else print('Doesn\'t comply AOSA')
+    print('EVS is allowed') if re.search('EVS', message) else print('No EVS codec')
+    print('SDP is checked') if re.search('sendrecv', message) else print('Check SDP: no bilateral voice')
+    print('P-Early-Media:supported') if re.search('P-Early-Media: supported', message) else print('P-Early-Media: NOT supported')
+    print('P-Access-Network-Info: IEEE-802.11') if re.search('P-Access-Network-Info: IEEE-802.11', message) else print('No VoWiFi PANI')
+    print('Cellular-Network-Info: 3GPP-E-UTRAN') if re.search('Cellular-Network-Info: 3GPP-E-UTRAN', message) else print('No CNI for VoWiFi')
+    finish()
+
+
+list_of_functions = {
+    'header_verification' : 'Header verification',
+    'client_verification' : 'Client Errros verification',
+    'server_verification' : 'Server Errors verification',
+    'global_errors_verification' : 'Global Errors verification',
+    'phone_context': 'Attribute verification',
+    'crosshcheck' : 'Crosscheck',
+    'all' : "All above mentioned items."
+    }
+
+
+while True:
+    start("Available options:")
+    index = 1
+    for key in list_of_functions:
+        print("{}.".format(index), list_of_functions[key])
+        index+=1
+    print("\nEnter any number from the options:")
+    
+    next = int(input(">"))
+    '''
+    assert type(next) != str, "Should be int"   
+    assert type(next) != float, "Should be int"  
+    assert type(next) != bool, "Should be int"  
+    assert type(next) != None, "Should not be empty"  
+    '''
+    try:
+        if next == int(1): header_verification(message)
+        if next == int(2): client_verification(message)
+        if next == int(3): server_verification(message)
+        if next == int(4): global_errors_verification(message)
+        if next == int(5): phone_context_verification(message)
+        if next == int(6): crosscheck(message)
+        if next == int(7): print("Under construction.")
+    except Exception as ex:
+    	print("The input contains wrong symbol(s):{}".format(ex))
+    	print("Please, try again.")    
+
+    
+
+
 
