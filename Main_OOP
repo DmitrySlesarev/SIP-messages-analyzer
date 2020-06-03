@@ -1,40 +1,72 @@
-#-*-coding: utf-8-*-  
+# -*- coding: utf-8 -*-
+
+"""
+The Program is to speed up verifying compliance with RFC 3261.  
+The applied concepts are taken from free access, no paid content.  
+All the conditions are in accordance with Russian Networks. If   
+intend to use it in different country, code inspection is needed.  
+"""
 
 import re
 from sys import argv
 from sys import exit
 from os.path import exists
 
-
-class Decoration():
+# There is no inheritance since the class is based on an object.  
+class Decoration:
+    """The class is for design of other classes."""  
 
     def start(self, func):
-        ## this function wraps initial text  
+        """The method adds frame with '=' at the beginning."""  
         print("="*20)
         print(func.upper())
         print("="*20)
 
     def finish(self):
-        ## this function finishes text  
+        """The method adds frame with '=' at the end"""  
         print("-"*20)
         print("FINISHED\n")
 
 
 class Entry_point(Decoration):
-
+    """The class initiates work with input."""  
+    
     def __init__(self):
-        print("""This script analyzes content of Session Initiation Protocol in \
-             accordance with RFC's:3265, 3853, 4320, 4916, 5393, 5621, 5626, 5630, 5922,\
-             5954, 6026, 6141, 6665, 6878, 7462, 7463, 8217, 8591\n""")
+        """The method provides information about license."""  
+        print("""\nCopyright 2020 Dmitry Slesarev @ Sony Mobile Communications.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.\n""")
+        
+        with open('LICENSE.txt', 'r') as l:
+            file = str(l.read())
+        print("Do you want to read the License? Y/N")
+        decision = str(input("> "))
+        if "y" == decision or "Y" == decision:
+            print(file)
+        else:
+            pass
 
     def enter(self):
-        print("""Type the name of .txt(!) file with single(!) SIP message to analyse:""")
+        """The method requires name of the file to open."""  
+        print("""Put file of .txt format into the directory \
+and enter its name here:""")
         name_of_file = str(input("> "))
         with open(name_of_file, "r+") as f:
             message = str(f.read())
         return message
 
     def processing_file(self):
+        """The method handles content of the file."""  
         while True:
             try:
                 message = self.enter()
@@ -57,9 +89,10 @@ class Entry_point(Decoration):
 
 
 class Options(Entry_point):
+    """The class provides options for handling the content."""  
 
     def header_verification(self, arg):
-        ## The Function checks if the headers comply RFC 3261 
+        """The method checks if the headers comply RFC 3261."""  
         self.arg = arg
          
         headers_list = {
@@ -91,7 +124,7 @@ class Options(Entry_point):
 
 
     def client_verification(self, arg):
-        ## The Function checks if there are any Client Errors  
+        """The method verifies errors of client for SIP message."""  
         self.arg = arg        
 
         client_errors = {
@@ -117,7 +150,7 @@ class Options(Entry_point):
 
 
     def server_verification(self, arg):
-        ## The Function checks if there are any Server Errors  
+        """The method checks if there are any Server Errors."""  
         self.arg = arg
 
         server_errors = {
@@ -135,7 +168,7 @@ class Options(Entry_point):
 
 
     def global_errors_verification(self, arg):
-        ## The Function checks if there are any Global Errors  
+        """The method checks if there are any Global Errors."""  
         self.arg = arg
 
         global_errors = {
@@ -153,7 +186,7 @@ class Options(Entry_point):
 
 
     def phone_context_verification(self, arg):
-        ## The Function checks the phone-context attribute  
+        """The method checks the phone-context attribute."""  
         self.arg = arg
 
         self.start("Phone context check:")
@@ -176,7 +209,7 @@ class Options(Entry_point):
 
 
     def crosscheck(self, arg):
-    	## The functions doesn't comply PEP8 intentionally  
+        """The method doesn't comply PEP8 for purpose."""  
         self.arg = arg
 
         self.start("Crosscheck:")
@@ -188,12 +221,16 @@ class Options(Entry_point):
         print('P-Access-Network-Info: IEEE-802.11') if re.search('P-Access-Network-Info: IEEE-802.11', self.arg) else print('No VoWiFi PANI')
         print('Cellular-Network-Info: 3GPP-E-UTRAN') if re.search('Cellular-Network-Info: 3GPP-E-UTRAN', self.arg) else print('No CNI for VoWiFi')
         self.finish()	
-
+    
+    def reference(self):
+        """The method is still vague."""  
+        print("Under construction.")
 
 class Action(Options):
+    """The class defines the menu."""  
 
     def action_points(self):
-        
+        """The method defines options of choice."""  
         list_of_functions = {
            'header_verification' : 'Header verification',
             'client_verification' : 'Client Errors verification',
@@ -230,16 +267,20 @@ class Action(Options):
                 if next == int(5): self.phone_context_verification(argument)
                 if next == int(6): self.crosscheck(argument)
                 if next == int(7): print("Under construction.")
-                if next == int(8): exit(1)
+                if next == int(8): self.reference()
+                if next == int(9): exit(1)
             except Exception as ex:
                 print("The input contains wrong symbol(s):{}".format(ex))
                 print("Please, try again.")    
 
 class End(Entry_point):
+    """The class for quitting the programm. Under construction."""  
+    
+    def __init__(self):
+        """The constructor of the class. Not defined yet."""
+        pass
 
-	def __init__(self):
-		pass
-
+# The common entry point.  
 if __name__ == "__main__":
     new = Action()
     new.action_points()
