@@ -12,19 +12,28 @@ from sys import argv
 from sys import exit
 from os.path import exists
 
+# Windows10 doesn't support colors for console by default.  
+# Thus you need to enable them. The code is about that. 
+import ctypes
+kernel32 = ctypes.windll.kernel32
+kernel32.SetConsoleMode(kernel32.GetStdHandle(-11), 7)
+
+# Importing the module to compare SIP files
+import difflib
+
 # There is no inheritance since the class is based on an object.  
 class Decoration:
     """The class is for design of other classes."""  
 
     def start(self, func):
         """The method adds frame with '=' at the beginning."""  
-        print("="*20)
+        print(('{red}={endcolor}'*20).format(red='\033[31m', endcolor='\033[0m'))
         print(func.upper())
-        print("="*20)
+        print(('{red}={endcolor}'*20).format(red='\033[31m', endcolor='\033[0m'))
 
     def finish(self):
         """The method adds frame with '=' at the end"""  
-        print("-"*20)
+        print(('{red}-{endcolor}'*20).format(red='\033[31m', endcolor='\033[0m'))
         print("FINISHED\n")
 
 
@@ -33,7 +42,7 @@ class Entry_point(Decoration):
     
     def __init__(self):
         """The method provides information about license."""  
-        print("""\nCopyright 2020 Dmitry Slesarev @ Sony Mobile Communications.
+        print("""\n{gray}Copyright 2020 Dmitry Slesarev @ Sony Mobile Communications.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -45,11 +54,11 @@ Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
-limitations under the License.\n""")
+limitations under the License.{endcolor}\n""".format(gray='\033[37m', endcolor='\033[0m'))
         
         with open('LICENSE.txt', 'r') as l:
             file = str(l.read())
-        print("Do you want to read the License? Y/N")
+        print("Do you want to read the License? {red}Y/N{endcolor}".format(red='\033[31m', endcolor='\033[0m'))
         decision = str(input("> "))
         if "y" == decision or "Y" == decision:
             print(file)
@@ -220,11 +229,36 @@ class Options(Entry_point):
         print('P-Early-Media:supported') if re.search('P-Early-Media: supported', self.arg) else print('P-Early-Media: NOT supported')
         print('P-Access-Network-Info: IEEE-802.11') if re.search('P-Access-Network-Info: IEEE-802.11', self.arg) else print('No VoWiFi PANI')
         print('Cellular-Network-Info: 3GPP-E-UTRAN') if re.search('Cellular-Network-Info: 3GPP-E-UTRAN', self.arg) else print('No CNI for VoWiFi')
-        self.finish()	
-    
+        self.finish()
+
+    def compare_files(self):
+        """The method to compare two files i.g.
+        the current file with reference"""
+        print("Enter the full path for the file #1")
+        file1 = str(input("> "))
+
+        print("Enter the full path for the file #2")
+        file2 = str(input("> "))
+
+        with open(file1, 'r') as f1:
+            text1 = f1.read()
+
+        with open(file2, 'r') as f2:
+            text2 = f2.read()
+
+        file1_split = text1.splitlines()
+        file2_split = text2.splitlines()
+
+        diff = difflib.Differ().compare(file1_split, file2_split)
+        for i in diff:
+            print(i)
+
+        x = 'DONE.\n'
+        print("\033[31m {} \033[0m".format(x))
+
     def reference(self):
-        """The method is still vague."""  
-        print("Under construction.")
+        """The method's still vague."""  
+        print("\aUNDER CONSTRUCTION!!!")
 
 class Action(Options):
     """The class defines the menu."""  
@@ -232,14 +266,15 @@ class Action(Options):
     def action_points(self):
         """The method defines options of choice."""  
         list_of_functions = {
-           'header_verification' : 'Header verification',
+            'header_verification' : 'Header verification',
             'client_verification' : 'Client Errors verification',
             'server_verification' : 'Server Errors verification',
             'global_errors_verification' : 'Global Errors verification',
             'phone_context': 'Attribute verification',
             'crosshcheck' : 'Crosscheck',
             'all' : 'All above mentioned items',
-            'exit' : "EXIT"
+            'compare': 'Compare two SIP files',
+            'exit' : 'EXIT',
             }
 
         argument = self.processing_file()
@@ -266,19 +301,19 @@ class Action(Options):
                 if next == int(4): self.global_errors_verification(argument)
                 if next == int(5): self.phone_context_verification(argument)
                 if next == int(6): self.crosscheck(argument)
-                if next == int(7): print("Under construction.")
-                if next == int(8): self.reference()
+                if next == int(7):
+                    self.header_verification(argument)
+                    self.client_verification(argument)
+                    self.server_verification(argument)
+                    self.global_errors_verification(argument)
+                    self.phone_context_verification(argument)
+                    self.crosscheck(argument)
+                if next == int(8): self.compare_files()
                 if next == int(9): exit(1)
+                if next >= int(10): self.reference()                
             except Exception as ex:
                 print("The input contains wrong symbol(s):{}".format(ex))
                 print("Please, try again.")    
-
-class End(Entry_point):
-    """The class for quitting the programm. Under construction."""  
-    
-    def __init__(self):
-        """The constructor of the class. Not defined yet."""
-        pass
 
 # The common entry point.  
 if __name__ == "__main__":
